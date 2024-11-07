@@ -9,9 +9,13 @@
 아직은 오픈스택의 vm을 쓰지 못하는 상황이어서 NCP의 VM을 통해서 k8s를 구축하였습니다.
 
 ansible 설치 (Ubuntu)
+
 sudo apt-get install software-properties-common
+
 sudo apt-add-repository ppa:ansible/ansible
+
 sudo apt-get update
+
 sudo apt-get install ansible
 
 
