@@ -20,36 +20,42 @@
  
 
 실행 완료
+![image](https://github.com/user-attachments/assets/7d2833fa-294d-4aac-b065-d08a93ac1b74)
 
 
  
 
 3. 워커 노드 셋업 플레이북 실행
+![image](https://github.com/user-attachments/assets/04230c19-06c4-48d5-a96b-be4600138596)
 
 
  
 
 4. 마스터노드에서 node 확인
+![image](https://github.com/user-attachments/assets/3629ca3d-39ce-44cb-848f-d35ec66fc9f3)
 
 
  
 
 5. vm 추가 후, 워커 노드 셋업 플레이북 재실행
+![image](https://github.com/user-attachments/assets/22a07943-f986-4077-b10f-af8eac3f50ee)
 
 
  
 
 전에 붙인 노드는 건너뛰고 추가된 노드만 task진행됨
+![image](https://github.com/user-attachments/assets/575e812e-f765-4021-879b-ab413c9fb55f)
 
 
  
 
 6. 추가된 노드 확인
+![image](https://github.com/user-attachments/assets/4e149120-47a7-4e38-80f0-db89cc8a1390)
 
 
 
 
-
+---
 
 ## 2기 스터디 목표
 1. 슬레이브 노드의 인바운드 트래픽이 증가하여서 노드의 리소스가 부족해지면 모니터링 서버가 ansible 서버로 api를 호출하고, ansible 서버는 노드를 추가로 구성하여서 마스터 노드에 조인시키는 것을 목표로 합니다.
