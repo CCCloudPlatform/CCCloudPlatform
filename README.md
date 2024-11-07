@@ -61,7 +61,8 @@ sudo apt-get install ansible
  
 
    이전에 조인된 노드는 건너뛰고 추가된 노드만 task진행됨
-![image](https://github.com/user-attachments/assets/adf993e9-20c2-4f48-bc7c-929faf00e29e)
+![image](https://github.com/user-attachments/assets/d5bb0541-2255-429f-a631-d1c0348959cd)
+
 
 
 
