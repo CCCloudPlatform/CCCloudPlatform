@@ -20,7 +20,7 @@
 
  
 
-실행 완료
+   실행 완료
 ![image](https://github.com/user-attachments/assets/66705954-cfc2-4f08-b3db-456304c0623f)
 
 
@@ -48,7 +48,7 @@
 
  
 
-전에 붙인 노드는 건너뛰고 추가된 노드만 task진행됨
+   이전에 조인된 노드는 건너뛰고 추가된 노드만 task진행됨
 ![image](https://github.com/user-attachments/assets/adf993e9-20c2-4f48-bc7c-929faf00e29e)
 
 
