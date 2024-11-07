@@ -14,43 +14,50 @@
  
 
 2. 마스터 노드 셋업 플레이북 실행
-![image](https://github.com/user-attachments/assets/38240a58-5a44-430a-95e3-4b19dad5934e)
+![image](https://github.com/user-attachments/assets/46ece8f1-a691-4829-8dca-cd75e131ef1c)
+
 
 
  
 
 실행 완료
-![image](https://github.com/user-attachments/assets/7d2833fa-294d-4aac-b065-d08a93ac1b74)
+![image](https://github.com/user-attachments/assets/66705954-cfc2-4f08-b3db-456304c0623f)
+
 
 
  
 
 3. 워커 노드 셋업 플레이북 실행
-![image](https://github.com/user-attachments/assets/04230c19-06c4-48d5-a96b-be4600138596)
+![image](https://github.com/user-attachments/assets/5bb07497-f2de-4c83-bdf0-ef705a33e998)
+
 
 
  
 
 4. 마스터노드에서 node 확인
-![image](https://github.com/user-attachments/assets/3629ca3d-39ce-44cb-848f-d35ec66fc9f3)
+![image](https://github.com/user-attachments/assets/03bc7a71-1bff-4634-be15-8bda985c6b62)
+
 
 
  
 
 5. vm 추가 후, 워커 노드 셋업 플레이북 재실행
-![image](https://github.com/user-attachments/assets/22a07943-f986-4077-b10f-af8eac3f50ee)
+![image](https://github.com/user-attachments/assets/e2968e35-3f97-488b-a9db-86f4a8184eb8)
+
 
 
  
 
 전에 붙인 노드는 건너뛰고 추가된 노드만 task진행됨
-![image](https://github.com/user-attachments/assets/575e812e-f765-4021-879b-ab413c9fb55f)
+![image](https://github.com/user-attachments/assets/adf993e9-20c2-4f48-bc7c-929faf00e29e)
+
 
 
  
 
 6. 추가된 노드 확인
-![image](https://github.com/user-attachments/assets/4e149120-47a7-4e38-80f0-db89cc8a1390)
+![image](https://github.com/user-attachments/assets/c8aba61c-5633-4e98-ab95-9fe23ab04566)
+
 
 
 
