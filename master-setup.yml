@@ -1,0 +1,118 @@
+---
+- hosts: master
+  become: yes
+  tasks:
+    - name: 스왑 메모리 비활성화
+      command: swapoff -a
+
+    - name: br_netfilter 모듈 로드
+      shell: modprobe br_netfilter
+      become: yes
+
+    - name: br_netfilter 모듈 로드 설정 파일 생성
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          br_netfilter
+
+    - name: 커널 파라미터 설정
+      copy:
+        dest: /etc/sysctl.d/k8s.conf
+        content: |
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.bridge.bridge-nf-call-iptables = 1
+          net.ipv4.ip_forward = 1
+
+    - name: 커널 파라미터 즉시 적용
+      command: sysctl --system
+
+    - name: socat 패키지 설치
+      apt:
+        name: socat
+        update_cache: yes
+
+    - name: Docker 설치 스크립트 실행 (이미 설치되어 있지 않은 경우에만)
+      shell: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        chmod +x get-docker.sh
+        sudo ./get-docker.sh
+
+    - name: containerd 기본 설정 파일 생성
+      shell: |
+        mkdir -p /etc/containerd
+        containerd config default | tee /etc/containerd/config.toml
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+        systemctl restart containerd
+
+    - name: Kubernetes 설치
+      shell: |
+        mkdir -p -m 755 /etc/apt/keyrings
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+        apt-get update && apt-get install -y kubelet kubeadm kubectl
+        apt-mark hold kubelet kubeadm kubectl
+
+    - name: Kubernetes 클러스터 초기화
+      become: yes
+      shell: kubeadm init --pod-network-cidr=192.168.0.0/16
+      register: kubeadm_output
+
+    - name: .kube 디렉토리 생성
+      file:
+        path: /home/ubuntu/.kube
+        state: directory
+        mode: '0755'
+
+    - name: admin.conf 파일 복사
+      shell: cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+
+    - name: admin.conf 소유권 변경
+      shell: chown ubuntu:ubuntu /home/ubuntu/.kube/config
+      become: yes
+
+    - name: 유효한 kubeadm 토큰 조회
+      become: yes
+      become_user: root
+      shell: kubeadm token list | tail -n 1 | awk '{print $1}'
+      register: kubeadm_token
+
+    - name: CA 인증서 해시 값 추출
+      become: yes
+      become_user: root
+      shell: openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+      register: discovery_token_ca_cert_hash
+
+    - name: master-node.j2 파일에 kubeadm 토큰과 해시값 저장
+      local_action:
+        module: template
+        src: master-node.j2
+        dest: /etc/ansible/master-node-conf.j2
+      vars:
+        kubeadm_token: "{{ kubeadm_token }}"
+        discovery_token_ca_cert_hash: "{{ discovery_token_ca_cert_hash }}"
+      when: kubeadm_token.stdout is defined and discovery_token_ca_cert_hash.stdout is defined
+
+    - name: 마스터 노드에서 Join 명령어를 저장
+      set_fact:
+        kubeadm_token: "{{ kubeadm_token.stdout }}"
+        discovery_token_ca_cert_hash: "{{ discovery_token_ca_cert_hash.stdout }}"
+
+    - name: Join 명령어 생성
+      set_fact:
+        join_command: "kubeadm join {{ ansible_default_ipv4.address }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash sha256:{{ discovery_token_ca_cert_hash }}"
+
+    - name: 마스터 노드에서 Join 명령어 출력
+      debug:
+        msg: "Join command: {{ join_command }}"
+      when: join_command is defined
+
+    - name: Kubernetes API 서버가 준비될 때까지 대기
+      shell: |
+        until kubectl --kubeconfig=/home/ubuntu/.kube/config get nodes; do
+          sleep 5
+        done
+      become: yes
+
+    - name: Calico 네트워크 플러그인 설치
+      shell: KUBECONFIG=/home/ubuntu/.kube/config kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+      become: yes
