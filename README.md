@@ -7,6 +7,14 @@
 
 ## 1기 스터디 결과
 아직은 오픈스택의 vm을 쓰지 못하는 상황이어서 NCP의 VM을 통해서 k8s를 구축하였습니다.
+
+ansible 설치 (Ubuntu)
+sudo apt-get install software-properties-common
+sudo apt-add-repository ppa:ansible/ansible
+sudo apt-get update
+sudo apt-get install ansible
+
+
 1. 호스트 파일 작성
 ![image](https://github.com/user-attachments/assets/f997e010-7a62-4ae1-835b-add778a97262)
 
