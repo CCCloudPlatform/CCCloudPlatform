@@ -1,0 +1,80 @@
+- hosts: worker
+  vars_files:
+    - /etc/ansible/master-node-conf.j2
+  become: yes
+
+  pre_tasks:
+    - name: Check if socat is installed
+      shell: dpkg -l | grep -q socat
+      register: socat_installed
+      ignore_errors: true
+
+  tasks:
+    - block:
+        - name: 스왑 메모리 비활성화
+          command: swapoff -a
+
+        - name: br_netfilter 모듈 로드
+          shell: modprobe br_netfilter
+
+        - name: br_netfilter 모듈 로드 설정 파일 생성
+          copy:
+            dest: /etc/modules-load.d/k8s.conf
+            content: |
+              br_netfilter
+
+        - name: 커널 파라미터 설정
+          copy:
+            dest: /etc/sysctl.d/k8s.conf
+            content: |
+              net.bridge.bridge-nf-call-ip6tables = 1
+              net.bridge.bridge-nf-call-iptables = 1
+              net.ipv4.ip_forward = 1
+
+        - name: 커널 파라미터 즉시 적용
+          command: sysctl --system
+
+        - name: 브리지 네트워크 설정 확인
+          shell: sysctl net.bridge.bridge-nf-call-iptables
+          register: bridge_netfilter_status
+
+        - name: socat 패키지 설치
+          apt:
+            name: socat
+            update_cache: yes
+
+        - name: Docker 설치 스크립트 실행 (이미 설치되어 있지 않은 경우에만)
+          shell: |
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            chmod +x get-docker.sh
+            sudo ./get-docker.sh
+
+        - name: containerd 기본 설정 파일 생성
+          shell: |
+            mkdir -p /etc/containerd
+            containerd config default | tee /etc/containerd/config.toml
+            sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+            systemctl restart containerd
+
+        - name: Kubernetes 설치
+          shell: |
+            mkdir -p -m 755 /etc/apt/keyrings
+            curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+            echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+            apt-get update && apt-get install -y kubelet kubeadm kubectl
+            apt-mark hold kubelet kubeadm kubectl
+
+        - name: Debug kubeadm token on worker node
+          debug:
+            msg: "Token: {{ kubeadm_token }}"
+
+        - name: Debug discovery token hash on worker node
+          debug:
+            msg: "Hash: {{ discovery_token_ca_cert_hash }}"
+
+        - name: 마스터 노드에서 받은 토큰과 해시값을 사용해 클러스터에 조인
+          shell: |
+            kubeadm join {{ hostvars['master-node']['ansible_host'] }}:6443 \
+            --token {{ kubeadm_token }} \
+            --discovery-token-ca-cert-hash sha256:{{ discovery_token_ca_cert_hash }}
+      when: socat_installed.rc != 0
